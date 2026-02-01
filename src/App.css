@@ -258,6 +258,62 @@ tbody tr.no-data:hover {
   font-size: 0.9rem;
 }
 
+.manual-info {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #3182ce;
+}
+
+.btn-edit,
+.btn-edit-small {
+  padding: 0.5rem 1rem;
+  background: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-edit:hover,
+.btn-edit-small:hover {
+  background: #2c5aa0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-edit-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.manual-data {
+  background: #e6f7ff !important;
+  border-left: 3px solid #3182ce;
+}
+
+.manual-data:hover {
+  background: #d1efff !important;
+}
+
+.manual-highlight {
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.manual-badge {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  background: #3182ce;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .app {
     padding: 1rem;
@@ -306,5 +362,15 @@ tbody tr.no-data:hover {
 
   th {
     font-size: 0.7rem;
+  }
+
+  .btn-edit {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .manual-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.375rem;
   }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 const SHEET_ID = '1oINu6aCW38HJ4hI5ZiKf8C83zuBWf4I6GRGs6z9yfNc'
-const RANGE = 'Sheet1!A1:G202'  // Only 7 columns: סניף through סטטוס
+const RANGE = 'Sheet1!A1:J202'  // 10 columns: סניף through תאריך עדכון
 
 function App() {
   const [data, setData] = useState([])
@@ -58,22 +58,54 @@ function App() {
     }
   }
 
+  const getRowStatus = (row) => {
+    // Check if has manual votes
+    const manualVotes = row[7] // קולות ידניים
+    if (manualVotes && manualVotes !== '-') {
+      return 'נתונים ידניים ✏️'
+    }
+    return row[6] // Original status
+  }
+
+  const getDisplayVotes = (row) => {
+    // Use manual votes if available, otherwise use regular votes
+    const manualVotes = row[7]
+    if (manualVotes && manualVotes !== '-') {
+      return manualVotes
+    }
+    return row[3] || '-'
+  }
+
+  const openSheetRow = (rowIndex) => {
+    // rowIndex is 0-based in filtered data, need to find actual row in sheet
+    // Add 2 because: +1 for headers, +1 for 1-based indexing
+    const sheetRowNumber = rowIndex + 2
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0&range=A${sheetRowNumber}`
+    window.open(url, '_blank')
+  }
+
   const filteredData = () => {
     if (!data.length) return []
     
     const [headers, ...rows] = data
-    let filtered = rows
+    let filtered = rows.map((row, idx) => ({ row, originalIndex: idx }))
 
     // Filter by status
     if (filter === 'with-data') {
-      filtered = filtered.filter(row => row[6] === 'יש נתונים')
+      filtered = filtered.filter(({ row }) => {
+        const status = getRowStatus(row)
+        return status === 'יש נתונים' || status.includes('ידניים')
+      })
     } else if (filter === 'without-data') {
-      filtered = filtered.filter(row => row[6] === 'אין נתונים')
+      filtered = filtered.filter(({ row }) => {
+        const status = getRowStatus(row)
+        return status === 'אין נתונים'
+      })
     }
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(row =>
+      filtered = filtered.filter(({ row }) =>
         row.some(cell => 
           String(cell).toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -83,8 +115,8 @@ function App() {
     // Sort
     if (sortColumn !== null) {
       filtered = [...filtered].sort((a, b) => {
-        let aVal = a[sortColumn]
-        let bVal = b[sortColumn]
+        let aVal = a.row[sortColumn]
+        let bVal = b.row[sortColumn]
 
         // Handle numeric columns (קולות)
         if (sortColumn === 3) {
@@ -127,10 +159,15 @@ function App() {
   }
 
   const headers = data[0] || []
-  const rows = filteredData()
+  const filteredRows = filteredData()
   const allRows = data.slice(1) // Skip headers
-  const withData = allRows.filter(r => r[6] === 'יש נתונים').length
-  const withoutData = allRows.filter(r => r[6] === 'אין נתונים').length
+  
+  // Count by status including manual
+  const withData = allRows.filter(r => {
+    const status = getRowStatus(r)
+    return status === 'יש נתונים' || status.includes('ידניים')
+  }).length
+  const withoutData = allRows.filter(r => getRowStatus(r) === 'אין נתונים').length
 
   const getSortIcon = (columnIndex) => {
     if (sortColumn !== columnIndex) return ' ⇅'
@@ -194,7 +231,7 @@ function App() {
         <table>
           <thead>
             <tr>
-              {headers.map((header, i) => (
+              {headers.slice(0, 7).map((header, i) => (
                 <th 
                   key={i}
                   onClick={() => handleSort(i)}
@@ -204,25 +241,57 @@ function App() {
                   {header}{getSortIcon(i)}
                 </th>
               ))}
+              <th>פעולות</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => {
-              const status = row[6]
-              const rowClass = status === 'יש נתונים' ? 'has-data' : 'no-data'
+            {filteredRows.map(({ row, originalIndex }, i) => {
+              const status = getRowStatus(row)
+              const hasManualData = status.includes('ידניים')
+              const rowClass = status === 'יש נתונים' || hasManualData ? 'has-data' : 'no-data'
+              const manualClass = hasManualData ? 'manual-data' : ''
               
               return (
-                <tr key={i} className={rowClass}>
-                  {row.map((cell, j) => (
-                    <td key={j}>{cell || '-'}</td>
-                  ))}
+                <tr key={i} className={`${rowClass} ${manualClass}`}>
+                  <td>{row[0] || '-'}</td>
+                  <td>{row[1] || '-'}</td>
+                  <td>{row[2] || '-'}</td>
+                  <td className={hasManualData ? 'manual-highlight' : ''}>
+                    {getDisplayVotes(row)}
+                    {hasManualData && <span className="manual-badge">ידני</span>}
+                  </td>
+                  <td>{row[4] || '-'}</td>
+                  <td>{row[5] || '-'}</td>
+                  <td className={hasManualData ? 'manual-highlight' : ''}>
+                    {status}
+                  </td>
+                  <td>
+                    {status === 'אין נתונים' && (
+                      <button
+                        onClick={() => openSheetRow(originalIndex)}
+                        className="btn-edit"
+                        title="פתח Google Sheet לעריכה"
+                      >
+                        ✏️ ערוך
+                      </button>
+                    )}
+                    {hasManualData && (
+                      <button
+                        onClick={() => openSheetRow(originalIndex)}
+                        className="btn-edit-small"
+                        title="ערוך נתונים"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                  </td>
                 </tr>
               )
             })}
           </tbody>
         </table>
 
-        {rows.length === 0 && (
+        {filteredRows.length === 0 && (
           <div className="empty">
             <p>אין נתונים להצגה</p>
           </div>
@@ -231,6 +300,7 @@ function App() {
 
       <footer className="footer">
         <p>נתונים מעודכנים מ-Google Sheets | לחץ "רענן" לעדכון אחרון</p>
+        <p className="manual-info">💡 לחץ "ערוך" ליד סניף ללא נתונים כדי להוסיף מידע ידנית</p>
       </footer>
     </div>
   )
