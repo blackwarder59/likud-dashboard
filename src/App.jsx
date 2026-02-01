@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import EditModal from './components/EditModal'
 
 const SHEET_ID = '1oINu6aCW38HJ4hI5ZiKf8C83zuBWf4I6GRGs6z9yfNc'
 const RANGE = 'Sheet1!A1:J202'  // 10 columns: סניף through תאריך עדכון
@@ -12,6 +13,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortColumn, setSortColumn] = useState(null)
   const [sortDirection, setSortDirection] = useState('asc')
+  const [editingRow, setEditingRow] = useState(null)
 
   useEffect(() => {
     fetchData()
@@ -76,12 +78,18 @@ function App() {
     return row[3] || '-'
   }
 
-  const openSheetRow = (rowIndex) => {
-    // rowIndex is 0-based in filtered data, need to find actual row in sheet
-    // Add 2 because: +1 for headers, +1 for 1-based indexing
-    const sheetRowNumber = rowIndex + 2
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0&range=A${sheetRowNumber}`
-    window.open(url, '_blank')
+  const handleEdit = (row) => {
+    setEditingRow(row)
+  }
+
+  const handleCloseModal = () => {
+    setEditingRow(null)
+  }
+
+  const handleSaveSuccess = () => {
+    // Refresh data after successful save
+    fetchData()
+    setEditingRow(null)
   }
 
   const filteredData = () => {
@@ -268,16 +276,16 @@ function App() {
                   <td>
                     {status === 'אין נתונים' && (
                       <button
-                        onClick={() => openSheetRow(originalIndex)}
+                        onClick={() => handleEdit(row)}
                         className="btn-edit"
-                        title="פתח Google Sheet לעריכה"
+                        title="הוסף נתונים ידניים"
                       >
                         ✏️ ערוך
                       </button>
                     )}
                     {hasManualData && (
                       <button
-                        onClick={() => openSheetRow(originalIndex)}
+                        onClick={() => handleEdit(row)}
                         className="btn-edit-small"
                         title="ערוך נתונים"
                       >
@@ -302,6 +310,14 @@ function App() {
         <p>נתונים מעודכנים מ-Google Sheets | לחץ "רענן" לעדכון אחרון</p>
         <p className="manual-info">💡 לחץ "ערוך" ליד סניף ללא נתונים כדי להוסיף מידע ידנית</p>
       </footer>
+
+      {editingRow && (
+        <EditModal
+          row={editingRow}
+          onClose={handleCloseModal}
+          onSuccess={handleSaveSuccess}
+        />
+      )}
     </div>
   )
 }
