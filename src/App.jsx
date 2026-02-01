@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 const SHEET_ID = '1oINu6aCW38HJ4hI5ZiKf8C83zuBWf4I6GRGs6z9yfNc'
-const RANGE = 'Sheet1!A1:K202'
+const RANGE = 'Sheet1!A1:G202'  // Only 7 columns: סניף through סטטוס
 
 function App() {
   const [data, setData] = useState([])
@@ -28,6 +28,7 @@ function App() {
         row.c.map(cell => cell ? cell.v : '')
       )
       
+      console.log('First 3 rows:', rows.slice(0, 3))
       setData(rows)
       setLoading(false)
     } catch (err) {
