@@ -140,6 +140,9 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   overflow: hidden;
   overflow-x: auto;
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -150,6 +153,9 @@ table {
 thead {
   background: #3182ce;
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 th {
@@ -157,6 +163,9 @@ th {
   text-align: right;
   font-weight: 600;
   white-space: nowrap;
+  background: #3182ce;
+  position: sticky;
+  top: 0;
 }
 
 td {
@@ -257,11 +266,35 @@ tbody tr.no-data:hover {
     width: 100%;
   }
 
+  .table-container {
+    position: relative;
+    max-height: calc(100vh - 450px);
+  }
+
+  .table-container::after {
+    content: '← גלול לצדדים →';
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(255,255,255,0.95), transparent);
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    color: #666;
+    pointer-events: none;
+  }
+
   table {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
   }
 
   th, td {
-    padding: 0.5rem;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  th {
+    font-size: 0.7rem;
   }
 }
