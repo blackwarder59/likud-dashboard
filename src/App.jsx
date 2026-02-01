@@ -26,12 +26,21 @@ function App() {
       const response = await fetch(url)
       const text = await response.text()
       const json = JSON.parse(text.substring(47, text.length - 2))
-      const rows = json.table.rows.map(row => 
+      
+      // Extract headers from cols
+      const headers = json.table.cols.map(col => col.label || '')
+      
+      // Extract data rows
+      const dataRows = json.table.rows.map(row => 
         row.c.map(cell => cell ? cell.v : '')
       )
       
-      console.log('First 3 rows:', rows.slice(0, 3))
-      setData(rows)
+      // Combine: [headers, ...dataRows]
+      const allRows = [headers, ...dataRows]
+      
+      console.log('Headers:', headers)
+      console.log('First 2 data rows:', dataRows.slice(0, 2))
+      setData(allRows)
       setLoading(false)
     } catch (err) {
       console.error('Error:', err)
