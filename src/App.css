@@ -168,6 +168,16 @@ th {
   top: 0;
 }
 
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+th.sortable:hover {
+  background: #2c5aa0;
+}
+
 td {
   padding: 0.875rem 1rem;
   text-align: right;

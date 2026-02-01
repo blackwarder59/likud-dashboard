@@ -10,6 +10,8 @@ function App() {
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [sortColumn, setSortColumn] = useState(null)
+  const [sortDirection, setSortDirection] = useState('asc')
 
   useEffect(() => {
     fetchData()
@@ -38,6 +40,15 @@ function App() {
     }
   }
 
+  const handleSort = (columnIndex) => {
+    if (sortColumn === columnIndex) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(columnIndex)
+      setSortDirection('asc')
+    }
+  }
+
   const filteredData = () => {
     if (!data.length) return []
     
@@ -58,6 +69,30 @@ function App() {
           String(cell).toLowerCase().includes(searchTerm.toLowerCase())
         )
       )
+    }
+
+    // Sort
+    if (sortColumn !== null) {
+      filtered = [...filtered].sort((a, b) => {
+        let aVal = a[sortColumn]
+        let bVal = b[sortColumn]
+
+        // Handle numeric columns (קולות)
+        if (sortColumn === 3) {
+          aVal = aVal === '-' ? 0 : parseInt(aVal) || 0
+          bVal = bVal === '-' ? 0 : parseInt(bVal) || 0
+        }
+
+        // String comparison
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortDirection === 'asc' 
+            ? aVal.localeCompare(bVal, 'he')
+            : bVal.localeCompare(aVal, 'he')
+        }
+
+        // Numeric comparison
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal
+      })
     }
 
     return filtered
@@ -84,15 +119,21 @@ function App() {
 
   const headers = data[0] || []
   const rows = filteredData()
-  const withData = data.filter(r => r[6] === 'יש נתונים').length
-  const withoutData = data.filter(r => r[6] === 'אין נתונים').length
+  const allRows = data.slice(1) // Skip headers
+  const withData = allRows.filter(r => r[6] === 'יש נתונים').length
+  const withoutData = allRows.filter(r => r[6] === 'אין נתונים').length
+
+  const getSortIcon = (columnIndex) => {
+    if (sortColumn !== columnIndex) return ' ⇅'
+    return sortDirection === 'asc' ? ' ↑' : ' ↓'
+  }
 
   return (
     <div className="app" dir="rtl">
       <header className="header">
         <h1>🗳️ תוצאות מועצות סניפים - ליכוד 2026</h1>
         <p className="subtitle">
-          סה"כ {data.length - 1} רשימות | {withData} עם תוצאות | {withoutData} ללא תוצאות
+          סה"כ {allRows.length} רשימות | {withData} עם תוצאות | {withoutData} ללא תוצאות
         </p>
       </header>
 
@@ -102,7 +143,7 @@ function App() {
             onClick={() => setFilter('all')}
             className={filter === 'all' ? 'active' : ''}
           >
-            הכל ({data.length - 1})
+            הכל ({allRows.length})
           </button>
           <button
             onClick={() => setFilter('with-data')}
@@ -145,7 +186,14 @@ function App() {
           <thead>
             <tr>
               {headers.map((header, i) => (
-                <th key={i}>{header}</th>
+                <th 
+                  key={i}
+                  onClick={() => handleSort(i)}
+                  className="sortable"
+                  title={`מיין לפי ${header}`}
+                >
+                  {header}{getSortIcon(i)}
+                </th>
               ))}
             </tr>
           </thead>
